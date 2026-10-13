@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "krypton",
+  "version": "${version}",
+  "name": "Krypton",
+  "description": "Suspicious chunk finder and spawner finder with a clean UI.",
+  "authors": ["Krypton"],
+  "environment": "client",
+  "entrypoints": { "client": ["dev.krypton.KryptonClient"] },
+  "mixins": ["krypton.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
