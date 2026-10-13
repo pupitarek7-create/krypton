@@ -31,7 +31,8 @@ public final class Overlay {
         if (mc.currentScreen != null) return;
 
         Camera cam = mc.gameRenderer.getCamera();
-        Projector proj = new Projector(mc, cam);
+        Vec3d eye = new Vec3d(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ());
+        Projector proj = new Projector(mc, cam, eye);
         String dim = Scanner.currentDimension();
         TextRenderer tr = mc.textRenderer;
 
@@ -41,7 +42,7 @@ public final class Overlay {
             List<SpawnerInfo> spawners = Scanner.spawners(dim);
             for (SpawnerInfo s : spawners) {
                 Vec3d p = Vec3d.ofCenter(s.pos);
-                double dist = p.distanceTo(cam.getPos());
+                double dist = p.distanceTo(eye);
                 if (dist > Config.maxDistance) continue;
                 int color = s.unusual ? SPAWNER_UNUSUAL : SPAWNER;
                 float[] pt = proj.project(p);
@@ -62,9 +63,9 @@ public final class Overlay {
         if (Config.chunkFinder) {
             for (ChunkInfo c : Scanner.susChunks(dim)) {
                 if (!c.loaded) continue;
-                int y = c.anchor != null ? c.anchor.getY() : (int) cam.getPos().y;
+                int y = c.anchor != null ? c.anchor.getY() : (int) eye.y;
                 Vec3d p = new Vec3d(c.centerX(), y, c.centerZ());
-                double dist = p.distanceTo(cam.getPos());
+                double dist = p.distanceTo(eye);
                 if (dist > Config.maxDistance) continue;
                 float[] pt = proj.project(p);
                 if (pt == null) continue;
@@ -124,7 +125,11 @@ public final class Overlay {
     private static void marker(DrawContext ctx, float sx, float sy, double dist, int color) {
         int half = (int) Math.max(4, Math.min(22, 220 / Math.max(dist, 1)));
         int x = (int) sx, y = (int) sy;
-        ctx.drawBorder(x - half, y - half, half * 2, half * 2, color);
+        int x1 = x - half, y1 = y - half, x2 = x + half, y2 = y + half;
+        ctx.fill(x1, y1, x2, y1 + 1, color);
+        ctx.fill(x1, y2 - 1, x2, y2, color);
+        ctx.fill(x1, y1, x1 + 1, y2, color);
+        ctx.fill(x2 - 1, y1, x2, y2, color);
         ctx.fill(x - 1, y - 1, x + 1, y + 1, color);
     }
 
@@ -158,8 +163,8 @@ public final class Overlay {
         final double tanHalf, aspect;
         final int w, h;
 
-        Projector(MinecraftClient mc, Camera cam) {
-            eye = cam.getPos();
+        Projector(MinecraftClient mc, Camera cam, Vec3d eyePos) {
+            eye = eyePos;
             double yaw = Math.toRadians(cam.getYaw());
             double pitch = Math.toRadians(cam.getPitch());
             fx = -Math.sin(yaw) * Math.cos(pitch);
